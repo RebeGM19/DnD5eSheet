@@ -1,6 +1,9 @@
 import sys
+import sqlite3
 from PyQt5 import uic
 from PyQt5.QtWidgets import *
+from functools import partial
+from character import *
 
 class character_sheet(QMainWindow):
 
@@ -32,15 +35,31 @@ class character_sheet(QMainWindow):
         self.chaMod.setText(self.calcModAttributes(chaValue))
 
 
-    def __init__(self):
+    def save(self, connection):
+        charac = character(self.nameInput.text(), self.classInput.currentText(), self.raceInput.currentText(), self.backgroundInput.currentText(), self.levelInput.text(), "2", "1")
+        print(charac.name)
+        charac.saveCharacter(connection.cursor())
+        connection.commit()
+
+    def __init__(self, connection):
         super().__init__()
         uic.loadUi("mainwindow.ui", self)
+        listClasses = ["Artificier", "Barbarian", "Bard", "Blood Hunter", "Cleric", "Druid", "Fighter", "Monk", "Paladin", "Ranger", "Rogue", "Sorcerer", "Warlock", "Wizard"]
+        self.classInput.addItems(listClasses)
+        listRaces = ["Dwarf", "Elf", "Halfling", "Human", "Dragonborn", "Gnome", "Halfelf", "Halforc", "Tiefling"]
+        self.raceInput.addItems(listRaces)
+        listBackgrounds = ["Acolyte", "Criminal/Spy", "Folk Hero", "Haunted One", "Noble", "Sage", "Soldier", "Other"]
+        self.backgroundInput.addItems(listBackgrounds)
+
         self.butCalcAtr.clicked.connect(self.calcAttributes)
+        self.butSaveCharacter.clicked.connect(partial(self.save, connection=connection))
 
 
 
 if __name__ == '__main__':
+    connection = sqlite3.connect("DnD5e")
     app = QApplication(sys.argv)
-    GUI = character_sheet()
+    GUI = character_sheet(connection)
     GUI.show()
+    #connection.close()
     sys.exit(app.exec_())
